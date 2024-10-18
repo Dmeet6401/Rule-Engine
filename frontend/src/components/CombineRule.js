@@ -170,7 +170,17 @@ const CombineRule = () => {
         </button>
       </div>
 
-      {message && <p style={styles.message}>{message}</p>}
+      {message && (
+        <p 
+          style={{ 
+            ...styles.message, 
+            color: message === 'Select at least two rules to combine.' ? 'red' : 'green' 
+          }}
+        >
+          {message}
+        </p>
+      )}
+
     </div>
   );
 };
