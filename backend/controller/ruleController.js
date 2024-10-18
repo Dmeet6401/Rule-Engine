@@ -52,10 +52,27 @@ exports.evaluateRule = async (req, res) => {
     }
     const data = parseDataString(jsonData);  // Parse data string into object
     const result = evaluateAST(rule.ast, data);
-    console.log("result",result);
     
     res.json({ result });
   } catch (error) {
     res.status(400).json({ message: 'Error evaluating rule', error: error.message });
+  }
+};
+
+// Delete rule
+
+exports.removeRule = async (req, res) => {
+  const { ruleId } = req.body;  
+  try {
+    // Find the rule by its ID and remove it from the database
+    const rule = await Rule.findByIdAndDelete(ruleId);
+
+    if (!rule) {
+      return res.status(404).json({ message: 'Rule not found' });
+    }
+
+    res.json({ message: 'Rule removed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error removing rule', error: error.message });
   }
 };

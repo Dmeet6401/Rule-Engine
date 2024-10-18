@@ -69,7 +69,6 @@ function buildAST(tokens) {
 }
 
 function evaluateAST(node, data) {
-  console.log(node);
   
   if (node.type === 'operand') {
     return evalCondition(node.value, data);
