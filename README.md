@@ -201,10 +201,4 @@ This section provides details about the APIs used in the Rule Engine project, ex
 #### Application Link:
 The application is live at: [Rule Engine](https://rule-engine-theta.vercel.app/)
 
----
 
-#### Future Improvements:
-- Add real-time rule evaluation using WebSockets.
-- Implement user authentication and role-based access control.
-- Add more complex rule types like nested rules or rules with multiple operators.
-- Enhance the frontend with animations and better UI/UX.
