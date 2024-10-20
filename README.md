@@ -1,3 +1,6 @@
+Here is the markdown with the requested **API Documentation** section added after **Prerequisites**:
+
+```markdown
 # Rule Engine with Abstract Syntax Tree (AST)
 
 ## Table of Contents
@@ -6,6 +9,7 @@
 - [Tech Stack](#tech-stack)
 - [Design Choices](#design-choices)
 - [Prerequisites](#prerequisites)
+- [API Documentation](#api-documentation)
 - [Deployment](#deployment)
 - [Application Link](#application-link)
 - [Future Improvements](#future-improvements)
@@ -46,7 +50,6 @@ The **Rule Engine** is a dynamic application that allows users to create, combin
 
 4. **CombineRule Component**: Allows users to select existing rules and join them with operators like `AND`/`OR`, then submit the newly combined rule for storage.
 
-
 ---
 
 ## Prerequisites
@@ -75,25 +78,205 @@ The **Rule Engine** is a dynamic application that allows users to create, combin
 - **Docker**:
   - **Docker**: Install from [Docker](https://docs.docker.com/get-docker/).
   
-
 ---
 
-## CombineRule Component
+## API Documentation
+This section provides details about the APIs used in the Rule Engine project, explaining their purpose, request/response format, and error handling mechanisms.
 
-The **CombineRule** component provides a user interface to allow users to:
+### 1. Create Rule API
+**Purpose**: This API allows users to create a new rule and its corresponding AST (Abstract Syntax Tree) representation in the database.
 
-- **Select Existing Rules**: Users can select multiple rules from a dropdown list populated with previously created rules.
-- **Choose Logical Operators**: After selecting the rules, users can combine them using either `AND` or `OR`, which is chosen via a dropdown menu.
-- **Create a New Combined Rule**: Once the rules and operator are selected, the user can submit the form to create a new combined rule. This new rule is sent to the backend and stored in the database for future evaluations.
+**Method**: POST  
+**URL**: `/api/rules/create_rule`
 
-### How It Works:
-1. **Fetching Existing Rules**: The component fetches the list of existing rules from the backend using an API call when the page is loaded.
-2. **Combining Rules**: Users can select the rules to combine and the logical operator (`AND` or `OR`) via a dropdown. The selected rules are combined into a single rule.
-3. **Submitting the Combined Rule**: Once the user submits the new combined rule, it is stored in the backend for future use.
+**Request Format**:
+```json
+{
+  "ruleString": "(age > 30 AND department == 'Sales')",
+  "ast": {
+    "type": "operator",
+    "value": "AND",
+    "left": { "type": "operand", "value": "age > 30" },
+    "right": { "type": "operand", "value": "department == 'Sales'" }
+  }
+}
+```
 
-This component provides flexibility to create more complex rules based on existing simple rules, making the rule engine highly customizable and scalable.
+**Response Format (Success)**:
+```json
+{
+  "success": true,
+  "message": "Rule created successfully",
+  "rule": {
+    "_id": "60f5f9b3b3f0d1234567890",
+    "ruleString": "(age > 30 AND department == 'Sales')",
+    "ast": { /* AST Representation */ }
+  }
+}
+```
 
+**Error Handling**:
+- **400 Bad Request**: If required fields like `ruleString` or `ast` are missing.
+  ```json
+  {
+    "success": false,
+    "error": "Missing ruleString or AST"
+  }
+  ```
+- **500 Internal Server Error**: If there is an error while saving the rule.
+  ```json
+  {
+    "success": false,
+    "error": "Error saving the rule"
+  }
+  ```
 
+### 2. Evaluate Rule API
+**Purpose**: This API evaluates a rule against the provided user data and checks if the rule conditions match the data.
+
+**Method**: POST  
+**URL**: `/api/rules/evaluate_rule`
+
+**Request Format**:
+```json
+{
+  "ruleId": "60f5f9b3b3f0d1234567890",
+  "data": {
+    "age": 35,
+    "department": "Sales"
+  }
+}
+```
+
+**Response Format (Success)**:
+```json
+{
+  "success": true,
+  "message": "Rule evaluated successfully",
+  "result": true
+}
+```
+
+**Error Handling**:
+- **404 Not Found**: If the rule with the provided `ruleId` does not exist.
+  ```json
+  {
+    "success": false,
+    "error": "Rule not found"
+  }
+  ```
+- **400 Bad Request**: If `ruleId` or `data` fields are missing.
+  ```json
+  {
+    "success": false,
+    "error": "Missing ruleId or data"
+  }
+  ```
+- **500 Internal Server Error**: If there is an error during evaluation.
+  ```json
+  {
+    "success": false,
+    "error": "Error evaluating the rule"
+  }
+  ```
+
+### 3. Combine Rules API
+**Purpose**: This API allows users to combine multiple existing rules into a new rule using `AND` or `OR` operators.
+
+**Method**: POST  
+**URL**: `/api/rules/combine_rules`
+
+**Request Format**:
+```json
+{
+  "rules": [
+    { "ruleId": "60f5f9b3b3f0d1234567890" },
+    { "ruleId": "60f5f9b3b3f0d987654321" }
+  ],
+  "operator": "AND"
+}
+```
+
+**Response Format (Success)**:
+```json
+{
+  "success": true,
+  "message": "Rules combined successfully",
+  "combinedRule": {
+    "_id": "60f5f9b3b3f0d1234567899",
+    "ruleString": "(rule1String AND rule2String)",
+    "ast": { /* Combined AST Representation */ }
+  }
+}
+```
+
+**Error Handling**:
+- **404 Not Found**: If any provided `ruleId` does not exist.
+  ```json
+  {
+    "success": false,
+    "error": "One or more rules not found"
+  }
+  ```
+- **400 Bad Request**: If `rules` or `operator` are missing.
+  ```json
+  {
+    "success": false,
+    "error": "Missing rules or operator"
+  }
+  ```
+- **500 Internal Server Error**: If there is an error during combination.
+  ```json
+  {
+    "success": false,
+    "error": "Error combining the rules"
+  }
+  ```
+
+### 4. Set Threshold API
+**Purpose**: This API allows users to set a threshold for alerting based on a specific value and email for notifications.
+
+**Method**: POST  
+**URL**: `/api/threshold/set`
+
+**Request Format**:
+```json
+{
+  "threshold": 25,
+  "email": "user@example.com"
+}
+```
+
+**Response Format (Success)**:
+```json
+{
+  "success": true,
+  "message": "Threshold set successfully"
+}
+```
+
+**Error Handling**:
+- **400 Bad Request**: If `threshold` or `email` are missing or invalid.
+  ```json
+  {
+    "success": false,
+    "error": "Invalid threshold or email"
+  }
+  ```
+- **500 Internal Server Error**: If there is an error setting the threshold.
+  ```json
+  {
+    "success": false,
+    "error": "Error setting the threshold"
+  }
+  ```
+
+**Error Handling Summary**:
+- **400 Bad Request**: Returned when there is an issue with the request (e.g., missing fields, invalid data).
+- **404 Not Found**: Returned when a requested resource is not found.
+- **500 Internal Server Error**: Indicates a server-side issue (e.g., database error).
+
+---
 
 ## Deployment
 
@@ -104,36 +287,32 @@ This component provides flexibility to create more complex rules based on existi
    - **Build the Backend Container**:
      - Navigate to the backend directory and build the Docker image:
        ```bash
-       docker build -t ruleengine-backend .
-       ```
-   - **Push the Container**:  
-     Push the backend container to a container registry (e.g., Docker Hub or Back4App):
-     ```bash
-     docker tag ruleengine-backend <your-back4app-repo-url>:latest
-     docker push <your-back4app-repo-url>:latest
-     ```
-   - **Deploy on Back4App**:  
-     Log in to your Back4App account, configure the repository, and deploy the containerized backend.
+       docker build -t ruleengine
 
-2. **Vercel (Frontend)**:  
-   The frontend is deployed using Vercel. The following steps ensure continuous integration and deployment:
-   - **Connect Repository**:  
-     Connect your GitHub repository (or other version control system) to Vercel.
-   - **Automatic Deployment**:  
-     Once connected, Vercel will automatically build and deploy the frontend every time there is a push to the main branch. If you make updates or changes to the frontend, simply push to the repository and Vercel will handle the rest.
+-backend .
+       ```
+     - Push the image to Docker Hub or any container registry.
+   - **Deploy on Back4App**:
+     - Use the Back4App interface to deploy the container from the registry.
+     
+2. **Vercel (Frontend)**:
+   - Navigate to the frontend directory and push the project to a GitHub repository.
+   - Connect the GitHub repository to Vercel.
+   - Set up the necessary environment variables for API URLs.
+   - Vercel will handle the build and deployment.
+
+---
 
 ## Application Link
-
-You can access the deployed application at the following link:
-
-**Rule Engine Web App**: [https://rule-engine-ayk4psxkp-meet-desais-projects-0f3ca4a1.vercel.app/](https://rule-engine-ayk4psxkp-meet-desais-projects-0f3ca4a1.vercel.app/)
+The application is live at: [Rule Engine](https://rule-engine-ayk4psxkp-meet-desais-projects-0f3ca4a1.vercel.app/)
 
 ---
 
 ## Future Improvements
+- Add real-time rule evaluation using WebSockets.
+- Implement user authentication and role-based access control.
+- Add more complex rule types like nested rules or rules with multiple operators.
+- Enhance the frontend with animations and better UI/UX.
+```
 
-1. **User Authentication**: Add user authentication to enable rule ownership, rule sharing, and access control.
-2. **Advanced Rule Customization**: Allow users to define custom functions or logic for advanced rule customization.
-3. **Graphical Rule Builder**: Create a drag-and-drop graphical interface to help users visually create and modify rules.
-4. **Error Handling & Validation**: Enhance error handling for invalid rule formats and improve input validation, ensuring that the rules are syntactically and logically correct.
-
+Let me know if you want any further adjustments!
